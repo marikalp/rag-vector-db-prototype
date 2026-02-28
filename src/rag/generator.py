@@ -1,18 +1,13 @@
-from typing import Any
+from openai import OpenAI
 
 class Generator:
-    """
-    Wraps the interaction with the LLM.
-    In this prototype, we only define the interface.
-    """
-
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, api_key: str):
         self.model_name = model_name
+        self.client = OpenAI(api_key=api_key)
 
     def generate(self, prompt: str) -> str:
-        """
-        Given a prompt (query + context), returns a generated answer.
-        """
-        # In a real system, this would call an LLM API.
-        raise NotImplementedError("LLM generation is not executed in this prototype.")
-
+        response = self.client.chat.completions.create(
+            model=self.model_name,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response.choices[0].message.content
