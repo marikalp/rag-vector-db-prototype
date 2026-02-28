@@ -1,20 +1,14 @@
-from typing import List, Dict, Any
+from typing import List
+from openai import OpenAI
 
 class EmbeddingPipeline:
-    """
-    Simple abstraction for an embedding generation pipeline.
-    In a real deployment, this would call an external API (e.g. OpenAI, HuggingFace).
-    """
-
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, api_key: str):
         self.model_name = model_name
+        self.client = OpenAI(api_key=api_key)
 
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
-        """
-        Given a list of texts, returns a list of embedding vectors.
-        Here we only define the interface and expected behavior.
-        """
-        # Pseudo-implementation (no real API call)
-        # In a real system, this would call the embedding model.
-        raise NotImplementedError("Embedding generation is not executed in this prototype.")
-
+        response = self.client.embeddings.create(
+            model=self.model_name,
+            input=texts
+        )
+        return [item.embedding for item in response.data]
