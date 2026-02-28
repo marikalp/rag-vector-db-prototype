@@ -1,30 +1,35 @@
 from typing import List, Dict, Any, Optional
 from .base_vectorstore import BaseVectorStore
+import pinecone
 
 class PineconeVectorStore(BaseVectorStore):
-    """
-    Conceptual adapter for Pinecone.
-    This class defines how the RAG system would interact with Pinecone.
-    """
-
     def __init__(self, index_name: str, api_key: str, environment: str):
+        pinecone.init(api_key=api_key, environment=environment)
         self.index_name = index_name
-        self.api_key = api_key
-        self.environment = environment
-        # In a real implementation, here we would initialize the Pinecone client.
 
-    def create_index(self) -> None:
-        # Pseudo-code for index creation
-        # e.g. pinecone.create_index(self.index_name, dimension=1536, metric="cosine")
-        raise NotImplementedError("Index creation is not executed in this prototype.")
+        if index_name not in pinecone.list_indexes():
+            pinecone.create_index(index_name, dimension=1536, metric="cosine")
 
-    def insert(self, vectors: List[List[float]], metadata: Optional[List[Dict[str, Any]]] = None) -> None:
-        # Pseudo-code for upsert
-        # e.g. index.upsert(vectors_with_ids_and_metadata)
-        raise NotImplementedError("Insert is not executed in this prototype.")
+        self.index = pinecone.Index(index_name)
 
-    def query(self, vector: List[float], k: int = 5, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
-        # Pseudo-code for query
-        # e.g. index.query(vector=vector, top_k=k, filter=filters)
-        raise NotImplementedError("Query is not executed in this prototype.")
+    def create_index(self):
+        pass  # già creato nel costruttore
 
+    def insert(self, vectors: List[List[float]], metadata: Optional[List[Dict[str, Any]]] = None):
+        items = []
+        for i, vec in enumerate(vectors):
+            items.append({
+                "id": f"doc-{i}",
+                "values": vec,
+                "metadata": metadata[i] if metadata else {}
+            })
+        self.index.upsert(items)
+
+    def query(self, vector: List[float], k: int = 5, filters: Optional[Dict[str, Any]] = None):
+        result = self.index.query(
+            vector=vector,
+            top_k=k,
+            include_metadata=True,
+            filter=filters
+        )
+        return result.matches
