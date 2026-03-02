@@ -7,7 +7,7 @@ from src.rag.generator import Generator
 
 def main():
     embedding_model = EmbeddingPipeline(
-        model_name="text-embedding-3-large",
+       model_name="text-embedding-3-small",
         api_key=OPENAI_API_KEY
     )
 
