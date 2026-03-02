@@ -25,7 +25,8 @@ def main():
     generator = Generator(model_name="gpt-4o-mini", api_key=OPENAI_API_KEY)
 
         # CHIEDI IL PDF ALL'UTENTE
-    pdf_path = input("Inserisci il nome del PDF da caricare (es: documento.pdf): ").strip()
+    pdf_name = input("Inserisci il nome del PDF da caricare (es: documento.pdf): ").strip()
+pdf_path = f"pdfs/{pdf_name}"
 
     loader = PDFLoader(chunk_size=500, chunk_overlap=50)
     text = loader.load_pdf(pdf_path)
