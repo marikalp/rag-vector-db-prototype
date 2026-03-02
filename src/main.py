@@ -24,7 +24,7 @@ def main():
     context_builder = ContextBuilder(max_tokens=1024)
     generator = Generator(model_name="gpt-4o-mini", api_key=OPENAI_API_KEY)
 
-    # CHIEDI IL PDF ALL'UTENTE
+    # CARICAMENTO PDF
     pdf_name = input("Inserisci il nome del PDF da caricare (es: documento.pdf): ").strip()
     pdf_path = f"pdfs/{pdf_name}"
 
@@ -39,20 +39,28 @@ def main():
     metadata = [{"text": chunk} for chunk in chunks]
     vector_store.insert(embeddings, metadata)
 
-    # QUERY
-    query = "Riassumi il contenuto del documento."
-    query_embedding = embedding_model.embed_texts([query])[0]
-    results = retriever.retrieve(query_embedding)
+    print("\nIl documento è stato indicizzato. Ora puoi fare domande libere.")
+    print("Scrivi 'exit' per uscire.\n")
 
-    context_docs = [m.metadata for m in results]
-    context = context_builder.build_context(context_docs)
+    # LOOP INTERATTIVO DI DOMANDE
+    while True:
+        query = input("Domanda: ").strip()
+        if query.lower() == "exit":
+            print("Uscita dal sistema.")
+            break
 
-    prompt = f"Context:\n{context}\n\nQuestion: {query}\nAnswer:"
-    answer = generator.generate(prompt)
+        query_embedding = embedding_model.embed_texts([query])[0]
+        results = retriever.retrieve(query_embedding)
 
-    print("\n=== RISPOSTA RAG ===\n")
-    print(answer)
+        context_docs = [m.metadata for m in results]
+        context = context_builder.build_context(context_docs)
+
+        prompt = f"Context:\n{context}\n\nQuestion: {query}\nAnswer:"
+        answer = generator.generate(prompt)
+
+        print("\n=== RISPOSTA ===\n")
+        print(answer)
+        print("\n-----------------------------\n")
 
 if __name__ == "__main__":
     main()
-
