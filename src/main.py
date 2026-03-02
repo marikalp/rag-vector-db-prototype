@@ -37,7 +37,19 @@ def main():
     # EMBEDDINGS + UPSERT
     embeddings = embedding_model.embed_texts(chunks)
     metadata = [{"text": chunk} for chunk in chunks]
-    vector_store.insert(embeddings, metadata)
+    from src.vectorstores.factory import VectorStoreFactory
+
+db_choice = input("Scegli il database (pinecone / chroma / milvus / weaviate): ").strip()
+
+vector_store = VectorStoreFactory.create(
+    db_choice,
+    index_name="rag-index",
+    api_key=PINECONE_API_KEY,
+    cloud="aws",
+    region="us-east-1"
+)
+
+    
 
     print("\nIl documento è stato indicizzato. Ora puoi fare domande libere.")
     print("Scrivi 'exit' per uscire.\n")
