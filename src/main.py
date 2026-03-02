@@ -1,9 +1,9 @@
-from src.config import OPENAI_API_KEY, PINECONE_API_KEY
 from src.embeddings.embedding_pipeline import EmbeddingPipeline
 from src.vectorstores.pinecone_store import PineconeVectorStore
 from src.rag.retriever import Retriever
 from src.rag.context_builder import ContextBuilder
 from src.rag.generator import Generator
+
 
 def main():
     embedding_model = EmbeddingPipeline(
