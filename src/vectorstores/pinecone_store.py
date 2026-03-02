@@ -1,19 +1,25 @@
 from typing import List, Dict, Any, Optional
 from .base_vectorstore import BaseVectorStore
-import pinecone
+from pinecone import Pinecone, ServerlessSpec
 
 class PineconeVectorStore(BaseVectorStore):
-    def __init__(self, index_name: str, api_key: str, environment: str):
-        pinecone.init(api_key=api_key, environment=environment)
+    def __init__(self, index_name: str, api_key: str, cloud: str = "aws", region: str = "us-east-1"):
         self.index_name = index_name
+        self.pc = Pinecone(api_key=api_key)
 
-        if index_name not in pinecone.list_indexes():
-            pinecone.create_index(index_name, dimension=1536, metric="cosine")
+        existing = self.pc.list_indexes().names()
+        if index_name not in existing:
+            self.pc.create_index(
+                name=index_name,
+                dimension=1536,
+                metric="cosine",
+                spec=ServerlessSpec(
+                    cloud=cloud,
+                    region=region
+                )
+            )
 
-        self.index = pinecone.Index(index_name)
-
-    def create_index(self):
-        pass  # già creato nel costruttore
+        self.index = self.pc.Index(index_name)
 
     def insert(self, vectors: List[List[float]], metadata: Optional[List[Dict[str, Any]]] = None):
         items = []
