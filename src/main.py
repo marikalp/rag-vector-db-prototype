@@ -24,18 +24,15 @@ def main():
     context_builder = ContextBuilder(max_tokens=1024)
     generator = Generator(model_name="gpt-4o-mini", api_key=OPENAI_API_KEY)
 
-        # CHIEDI IL PDF ALL'UTENTE
+    # CHIEDI IL PDF ALL'UTENTE
     pdf_name = input("Inserisci il nome del PDF da caricare (es: documento.pdf): ").strip()
-pdf_path = f"pdfs/{pdf_name}"
+    pdf_path = f"pdfs/{pdf_name}"
 
     loader = PDFLoader(chunk_size=500, chunk_overlap=50)
     text = loader.load_pdf(pdf_path)
     chunks = loader.chunk_text(text)
 
     print(f"Caricati {len(chunks)} chunk dal PDF '{pdf_path}'.")
-
-
-    print(f"Caricati {len(chunks)} chunk dal PDF.")
 
     # EMBEDDINGS + UPSERT
     embeddings = embedding_model.embed_texts(chunks)
@@ -58,3 +55,4 @@ pdf_path = f"pdfs/{pdf_name}"
 
 if __name__ == "__main__":
     main()
+
