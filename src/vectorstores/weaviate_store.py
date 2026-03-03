@@ -1,5 +1,6 @@
 import os
 import weaviate
+from weaviate.auth import AuthApiKey
 from weaviate.classes.config import Configure, Property, DataType
 from src.vectorstores.base_vectorstore import BaseVectorStore
 
@@ -7,17 +8,16 @@ class WeaviateVectorStore(BaseVectorStore):
     def __init__(self, index_name="RAGDocument", url=None):
         self.index_name = index_name
 
-        # Legge URL e API key dalle variabili d'ambiente
         cluster_url = os.getenv("WEAVIATE_URL")
         api_key = os.getenv("WEAVIATE_API_KEY")
 
-        if cluster_url is None or api_key is None:
+        if not cluster_url or not api_key:
             raise ValueError("WEAVIATE_URL e WEAVIATE_API_KEY devono essere impostate nel terminale.")
 
-        # Connessione al cluster Weaviate Cloud
+        # Connessione corretta a Weaviate Cloud
         self.client = weaviate.connect_to_weaviate_cloud(
             cluster_url=cluster_url,
-            auth_credentials=weaviate.AuthApiKey(api_key)
+            auth_credentials=AuthApiKey(api_key)
         )
 
         # Se la collection esiste già, la eliminiamo
@@ -62,6 +62,7 @@ class WeaviateVectorStore(BaseVectorStore):
 
     def clear(self):
         self.client.collections.delete(self.index_name)
+
 
 
 
