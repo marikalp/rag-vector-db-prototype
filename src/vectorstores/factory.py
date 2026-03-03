@@ -10,14 +10,12 @@ class VectorStoreFactory:
 
         if db_type == "pinecone":
             return PineconeVectorStore(**kwargs)
-
         if db_type == "chroma":
             return ChromaVectorStore(**kwargs)
-
         if db_type == "milvus":
             return MilvusVectorStore(**kwargs)
-
         if db_type == "weaviate":
             return WeaviateVectorStore(**kwargs)
 
         raise ValueError(f"Database vettoriale non supportato: {db_type}")
+
