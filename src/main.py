@@ -98,13 +98,15 @@ def run_benchmark():
     for db in dbs:
         print(f"\nBenchmarking {db.upper()}...")
 
+        safe_name = f"bench_{db}"  # Milvus-safe
         vector_store = VectorStoreFactory.create(
             db,
-            index_name=f"benchmark-{db}",
+            index_name=safe_name,
             api_key=PINECONE_API_KEY,
             cloud="aws",
             region="us-east-1"
         )
+
 
         runner = BenchmarkRunner(
             vectorstore=vector_store,
