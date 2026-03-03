@@ -6,9 +6,13 @@ class WeaviateVectorStore(BaseVectorStore):
     def __init__(self, index_name="RAGDocument", url="http://localhost:9000"):
         self.index_name = index_name
 
-        # Client v4 verso il proxy locale
-        self.client = weaviate.WeaviateClient(
-            connection_params=weaviate.connect.ConnectionParams.from_url(url)
+        # Connessione v4 verso proxy HTTP
+        self.client = weaviate.connect_to_custom(
+            http_host=url,
+            http_port=None,
+            grpc_host=None,
+            grpc_port=None,
+            skip_init_checks=True
         )
 
         # Se la collection esiste già, la eliminiamo
@@ -52,4 +56,5 @@ class WeaviateVectorStore(BaseVectorStore):
 
     def clear(self):
         self.client.collections.delete(self.index_name)
+
 
