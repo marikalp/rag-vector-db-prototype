@@ -8,42 +8,24 @@ from pymilvus import (
 )
 from src.vectorstores.base_vectorstore import BaseVectorStore
 
-
 class MilvusVectorStore(BaseVectorStore):
     def __init__(self, index_name="rag_index", dim=1536, uri="milvus.db"):
         self.index_name = index_name
         self.dim = dim
 
-        # Connessione a Milvus Lite (file locale)
         connections.connect("default", uri=uri)
 
-        # Se la collection esiste già, la eliminiamo per evitare conflitti
         if utility.has_collection(index_name):
             utility.drop_collection(index_name)
 
-        # Definizione schema
         fields = [
-            FieldSchema(
-                name="id",
-                dtype=DataType.INT64,
-                is_primary=True,
-                auto_id=True
-            ),
-            FieldSchema(
-                name="embedding",
-                dtype=DataType.FLOAT_VECTOR,
-                dim=dim
-            ),
-            FieldSchema(
-                name="text",
-                dtype=DataType.VARCHAR,
-                max_length=65535
-            )
+            FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
+            FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=dim),
+            FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65535)
         ]
 
         schema = CollectionSchema(fields)
 
-        # Creazione collection
         self.collection = Collection(
             name=index_name,
             schema=schema,
@@ -51,7 +33,6 @@ class MilvusVectorStore(BaseVectorStore):
             shards_num=2
         )
 
-        # Creazione indice
         self.collection.create_index(
             field_name="embedding",
             index_params={
@@ -61,7 +42,6 @@ class MilvusVectorStore(BaseVectorStore):
             }
         )
 
-        # Caricamento in memoria
         self.collection.load()
 
     def insert(self, embeddings, metadata_list):
@@ -88,6 +68,7 @@ class MilvusVectorStore(BaseVectorStore):
 
     def clear(self):
         utility.drop_collection(self.index_name)
+
 
 
 
