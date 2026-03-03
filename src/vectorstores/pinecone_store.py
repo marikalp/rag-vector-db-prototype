@@ -31,6 +31,16 @@ class PineconeVectorStore(BaseVectorStore):
             })
         self.index.upsert(items)
 
+    # Metodo richiesto dal benchmark
+    def retrieve(self, query_embedding: List[float], k: int = 5):
+        result = self.index.query(
+            vector=query_embedding,
+            top_k=k,
+            include_metadata=True
+        )
+        return [match.metadata for match in result.matches]
+
+    # Metodo opzionale (non usato dal benchmark)
     def query(self, vector: List[float], k: int = 5, filters: Optional[Dict[str, Any]] = None):
         result = self.index.query(
             vector=vector,
@@ -39,3 +49,7 @@ class PineconeVectorStore(BaseVectorStore):
             filter=filters
         )
         return result.matches
+
+    def clear(self):
+        self.index.delete(delete_all=True)
+
