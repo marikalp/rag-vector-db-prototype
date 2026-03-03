@@ -21,7 +21,7 @@ def run_interactive_rag():
 
     vector_store = VectorStoreFactory.create(
         db_choice,
-        index_name="rag-index",
+        index_name="rag_index",
         api_key=PINECONE_API_KEY,
         cloud="aws",
         region="us-east-1"
@@ -98,7 +98,9 @@ def run_benchmark():
     for db in dbs:
         print(f"\nBenchmarking {db.upper()}...")
 
-        safe_name = f"bench_{db}"  # Milvus-safe
+        # Milvus-safe index name
+        safe_name = f"bench_{db}"
+
         vector_store = VectorStoreFactory.create(
             db,
             index_name=safe_name,
@@ -106,7 +108,6 @@ def run_benchmark():
             cloud="aws",
             region="us-east-1"
         )
-
 
         runner = BenchmarkRunner(
             vectorstore=vector_store,
