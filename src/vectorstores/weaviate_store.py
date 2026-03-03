@@ -1,42 +1,55 @@
 import weaviate
+from weaviate.classes.config import Configure
 from src.vectorstores.base_vectorstore import BaseVectorStore
 
 class WeaviateVectorStore(BaseVectorStore):
     def __init__(self, index_name="RAGDocument", url="http://localhost:8080"):
         self.index_name = index_name
-        self.client = weaviate.Client(url)
 
-        if not self.client.schema.exists(index_name):
-            schema = {
-                "classes": [{
-                    "class": index_name,
-                    "vectorizer": "none",
-                    "properties": [
-                        {"name": "text", "dataType": ["text"]}
-                    ]
-                }]
-            }
-            self.client.schema.create(schema)
+        # Connessione con client v4
+        self.client = weaviate.connect_to_local(host=url.replace("http://", ""), port=8080)
+
+        # Se la classe esiste già, la eliminiamo
+        if self.index_name in self.client.collections.list_all():
+            self.client.collections.delete(self.index_name)
+
+        # Creazione collection
+        self.collection = self.client.collections.create(
+            name=self.index_name,
+            vectorizer_config=Configure.Vectorizer.none(),  # usiamo i nostri embeddings
+            properties=[
+                Configure.Property(name="text", data_type=weaviate.classes.config.DataType.TEXT)
+            ]
+        )
 
     def insert(self, embeddings, metadata_list):
-        for emb, meta in zip(embeddings, metadata_list):
-            self.client.data_object.create(
-                data_object={"text": meta["text"]},
-                class_name=self.index_name,
-                vector=emb
-            )
+        with self.collection.batch.dynamic() as batch:
+            for emb, meta in zip(embeddings, metadata_list):
+                batch.add_object(
+                    properties={"text": meta["text"]},
+                    vector=emb
+                )
 
     def retrieve(self, query_embedding, k=5):
         results = (
-            self.client.query
-            .get(self.index_name, ["text"])
-            .with_near_vector({"vector": query_embedding})
-            .with_limit(k)
+            self.collection.query.near_vector(
+                near_vector=query_embedding,
+                limit=k
+            )
+            .include_properties(["text"])
             .do()
         )
-        return results["data"]["Get"][self.index_name]
+
+        output = []
+        for obj in results.objects:
+            output.append({
+                "text": obj.properties["text"],
+                "score": obj.distance
+            })
+
+        return output
 
     def clear(self):
-        self.client.schema.delete_class(self.index_name)
+        self.client.collections.delete(self.index_name)
 
 
