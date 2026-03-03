@@ -1,23 +1,33 @@
 import time
 import numpy as np
 
-def benchmark_vectorstore(store, embeddings, metadata, queries, k=5):
-    results = {}
+class BenchmarkRunner:
+    def __init__(self, vectorstore, embeddings, metadata, queries, k=5):
+        self.vectorstore = vectorstore
+        self.embeddings = embeddings
+        self.metadata = metadata
+        self.queries = queries
+        self.k = k
 
-    # Indicizzazione
-    start = time.time()
-    store.insert(embeddings, metadata)
-    results["index_time"] = time.time() - start
+    def run(self):
+        results = {}
 
-    # Query
-    latencies = []
-    for q in queries:
-        q_start = time.time()
-        store.retrieve(q, k=k)
-        latencies.append(time.time() - q_start)
+        # Indicizzazione
+        start = time.time()
+        self.vectorstore.insert(self.embeddings, self.metadata)
+        results["index_time"] = time.time() - start
+        results["index_throughput"] = len(self.embeddings) / results["index_time"]
 
-    results["latency_mean"] = np.mean(latencies)
-    results["latency_p95"] = np.percentile(latencies, 95)
-    results["latency_p99"] = np.percentile(latencies, 99)
+        # Query
+        latencies = []
+        for q in self.queries:
+            q_start = time.time()
+            self.vectorstore.retrieve(q, k=self.k)
+            latencies.append(time.time() - q_start)
 
-    return results
+        results["latency_mean"] = float(np.mean(latencies))
+        results["latency_p95"] = float(np.percentile(latencies, 95))
+        results["latency_p99"] = float(np.percentile(latencies, 99))
+
+        return results
+
