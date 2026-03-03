@@ -24,10 +24,11 @@ class VectorStoreFactory:
 
         if db_type == "milvus":
             return MilvusVectorStore(
-                index_name=kwargs.get("index_name", "rag-index"),
+                index_name="rag_index",   # <-- underscore, non trattino
                 dim=kwargs.get("dim", 1536),
                 uri="milvus.db"
             )
+
 
         if db_type == "weaviate":
             return WeaviateVectorStore(
