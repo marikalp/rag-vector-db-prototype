@@ -2,6 +2,7 @@ import os
 import http.server
 import socketserver
 import requests
+import json
 
 WEAVIATE_URL = os.getenv("WEAVIATE_URL")
 API_KEY = os.getenv("WEAVIATE_API_KEY")
@@ -9,39 +10,47 @@ API_KEY = os.getenv("WEAVIATE_API_KEY")
 if not WEAVIATE_URL or not API_KEY:
     raise RuntimeError("WEAVIATE_URL e WEAVIATE_API_KEY devono essere impostate nel terminale.")
 
-class ProxyHandler(http.server.SimpleHTTPRequestHandler):
-    def do_POST(self):
-        length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(length)
+class ProxyHandler(http.server.BaseHTTPRequestHandler):
+    def _forward(self, method):
+        target_url = WEAVIATE_URL + self.path
 
-        resp = requests.post(
-            WEAVIATE_URL + self.path,
-            headers={
-                "Authorization": f"Bearer {API_KEY}",
-                "Content-Type": self.headers.get("Content-Type", "application/json"),
-            },
-            data=body,
-        )
+        # Headers da inoltrare
+        headers = {
+            "Authorization": f"Bearer {API_KEY}",
+            "Content-Type": self.headers.get("Content-Type", "application/json")
+        }
 
+        # Body (solo per POST/PUT)
+        body = None
+        if method in ["POST", "PUT"]:
+            length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(length)
+
+        # Inoltro
+        resp = requests.request(method, target_url, headers=headers, data=body)
+
+        # Risposta al client
         self.send_response(resp.status_code)
-        for k, v in resp.headers.items():
-            if k.lower() not in ["content-length", "transfer-encoding", "connection"]:
-                self.send_header(k, v)
+        self.send_header("Content-Type", "application/json")
         self.end_headers()
-        self.wfile.write(resp.content)
+
+        # Se il body non è JSON valido, rispondi comunque con {}
+        try:
+            self.wfile.write(resp.content)
+        except:
+            self.wfile.write(b"{}")
 
     def do_GET(self):
-        resp = requests.get(
-            WEAVIATE_URL + self.path,
-            headers={"Authorization": f"Bearer {API_KEY}"},
-        )
+        self._forward("GET")
 
-        self.send_response(resp.status_code)
-        for k, v in resp.headers.items():
-            if k.lower() not in ["content-length", "transfer-encoding", "connection"]:
-                self.send_header(k, v)
-        self.end_headers()
-        self.wfile.write(resp.content)
+    def do_POST(self):
+        self._forward("POST")
+
+    def do_PUT(self):
+        self._forward("PUT")
+
+    def do_DELETE(self):
+        self._forward("DELETE")
 
 
 if __name__ == "__main__":
@@ -49,3 +58,4 @@ if __name__ == "__main__":
     with socketserver.TCPServer(("", PORT), ProxyHandler) as httpd:
         print(f"Proxy Weaviate attivo su http://localhost:{PORT}")
         httpd.serve_forever()
+
