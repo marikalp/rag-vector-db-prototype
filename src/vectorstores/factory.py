@@ -32,9 +32,9 @@ class VectorStoreFactory:
 
         if db_type == "weaviate":
             return WeaviateVectorStore(
-                index_name=kwargs.get("index_name", "RAGDocument"),
-                url="http://localhost:8080"
+                index_name="RAGDocument"
             )
+        
 
         raise ValueError(f"Database vettoriale non supportato: {db_type}")
 
