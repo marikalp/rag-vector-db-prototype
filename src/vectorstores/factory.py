@@ -31,9 +31,7 @@ class VectorStoreFactory:
 
 
         if db_type == "weaviate":
-            return WeaviateVectorStore(
-                index_name="RAGDocument"
-            )
+            return WeaviateVectorStore(index_name="RAGDocument")
         
 
         raise ValueError(f"Database vettoriale non supportato: {db_type}")
