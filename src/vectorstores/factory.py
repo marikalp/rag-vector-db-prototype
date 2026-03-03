@@ -18,21 +18,19 @@ class VectorStoreFactory:
 
         if db_type == "chroma":
             return ChromaVectorStore(
-                index_name=kwargs.get("index_name", "rag-index"),
-                persist_directory="chroma_db"
+                index_name=kwargs.get("index_name", "rag-index")
             )
 
         if db_type == "milvus":
             return MilvusVectorStore(
-                index_name="rag_index",   # <-- underscore, non trattino
+                index_name=kwargs.get("index_name", "rag-index"),
                 dim=kwargs.get("dim", 1536),
                 uri="milvus.db"
             )
 
-
         if db_type == "weaviate":
             return WeaviateVectorStore(index_name="RAGDocument")
-        
 
         raise ValueError(f"Database vettoriale non supportato: {db_type}")
+
 
