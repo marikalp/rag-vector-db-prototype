@@ -37,7 +37,7 @@ class MilvusVectorStore(BaseVectorStore):
             FieldSchema(
                 name="text",
                 dtype=DataType.VARCHAR,
-                max_length=2000
+                max_length=65535
             )
         ]
 
