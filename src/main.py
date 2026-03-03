@@ -7,6 +7,10 @@ from src.rag.generator import Generator
 from src.loader.pdf_loader import PDFLoader
 from src.benchmark.benchmark import BenchmarkRunner
 
+import random
+import os
+
+
 def run_interactive_rag():
     db_choice = input("Scegli il database (pinecone / chroma / milvus): ").strip()
 
@@ -135,4 +139,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
