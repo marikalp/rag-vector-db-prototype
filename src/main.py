@@ -7,9 +7,6 @@ from src.rag.generator import Generator
 from src.loader.pdf_loader import PDFLoader
 from src.benchmark.benchmark import BenchmarkRunner
 
-import random
-import os
-
 
 def run_interactive_rag():
     db_choice = input("Scegli il database (pinecone / chroma / milvus): ").strip()
@@ -21,7 +18,7 @@ def run_interactive_rag():
 
     vector_store = VectorStoreFactory.create(
         db_choice,
-        index_name="rag_index",
+        index_name="ragindex",   # nome valido per tutti
         api_key=PINECONE_API_KEY,
         cloud="aws",
         region="us-east-1"
@@ -79,7 +76,6 @@ def run_benchmark():
     print("Modalità benchmark attiva.")
     print("Userò un dataset sintetico di test.\n")
 
-    # Dataset sintetico
     chunks = [f"Test chunk {i}" for i in range(200)]
     queries = [f"Query di test {i}" for i in range(20)]
 
@@ -98,8 +94,8 @@ def run_benchmark():
     for db in dbs:
         print(f"\nBenchmarking {db.upper()}...")
 
-        # Milvus-safe index name
-        safe_name = f"bench_{db}"
+        # nome valido per Pinecone + Milvus
+        safe_name = f"bench{db}"
 
         vector_store = VectorStoreFactory.create(
             db,
