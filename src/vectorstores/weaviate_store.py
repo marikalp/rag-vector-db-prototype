@@ -1,24 +1,27 @@
 import weaviate
-from weaviate.classes.config import Configure
+from weaviate.classes.config import Configure, Property, DataType
 from src.vectorstores.base_vectorstore import BaseVectorStore
 
 class WeaviateVectorStore(BaseVectorStore):
     def __init__(self, index_name="RAGDocument", url="http://localhost:8080"):
         self.index_name = index_name
 
-        # Connessione con client v4
-        self.client = weaviate.connect_to_local(host=url.replace("http://", ""), port=8080)
+        # Connessione corretta per client v4
+        self.client = weaviate.connect_to_local(
+            host="localhost",
+            port=8080
+        )
 
-        # Se la classe esiste già, la eliminiamo
+        # Se la collection esiste già, la eliminiamo
         if self.index_name in self.client.collections.list_all():
             self.client.collections.delete(self.index_name)
 
         # Creazione collection
         self.collection = self.client.collections.create(
             name=self.index_name,
-            vectorizer_config=Configure.Vectorizer.none(),  # usiamo i nostri embeddings
+            vectorizer_config=Configure.Vectorizer.none(),
             properties=[
-                Configure.Property(name="text", data_type=weaviate.classes.config.DataType.TEXT)
+                Property(name="text", data_type=DataType.TEXT)
             ]
         )
 
