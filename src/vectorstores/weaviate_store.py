@@ -1,30 +1,42 @@
-from typing import List, Dict, Any, Optional
-from .base_vectorstore import BaseVectorStore
+import weaviate
+from src.vectorstores.base_vectorstore import BaseVectorStore
 
 class WeaviateVectorStore(BaseVectorStore):
-    """
-    Conceptual adapter for Weaviate.
-    Defines how the RAG system would interact with a Weaviate instance.
-    """
+    def __init__(self, index_name="RAGDocument", url="http://localhost:8080"):
+        self.index_name = index_name
+        self.client = weaviate.Client(url)
 
-    def __init__(self, endpoint: str, api_key: Optional[str] = None, class_name: str = "Document"):
-        self.endpoint = endpoint
-        self.api_key = api_key
-        self.class_name = class_name
-        # In a real implementation, here we would initialize the Weaviate client.
+        if not self.client.schema.exists(index_name):
+            schema = {
+                "classes": [{
+                    "class": index_name,
+                    "vectorizer": "none",
+                    "properties": [
+                        {"name": "text", "dataType": ["text"]}
+                    ]
+                }]
+            }
+            self.client.schema.create(schema)
 
-    def create_index(self) -> None:
-        # Pseudo-code for schema creation
-        # e.g. client.schema.create_class({...})
-        raise NotImplementedError("Index creation is not executed in this prototype.")
+    def insert(self, embeddings, metadata_list):
+        for emb, meta in zip(embeddings, metadata_list):
+            self.client.data_object.create(
+                data_object={"text": meta["text"]},
+                class_name=self.index_name,
+                vector=emb
+            )
 
-    def insert(self, vectors: List[List[float]], metadata: Optional[List[Dict[str, Any]]] = None) -> None:
-        # Pseudo-code for batch import
-        # e.g. client.batch.add_data_object(...)
-        raise NotImplementedError("Insert is not executed in this prototype.")
+    def retrieve(self, query_embedding, k=5):
+        results = (
+            self.client.query
+            .get(self.index_name, ["text"])
+            .with_near_vector({"vector": query_embedding})
+            .with_limit(k)
+            .do()
+        )
+        return results["data"]["Get"][self.index_name]
 
-    def query(self, vector: List[float], k: int = 5, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
-        # Pseudo-code for nearVector query
-        # e.g. client.query.get(self.class_name, ["text"]).with_near_vector({"vector": vector}).with_limit(k)
-        raise NotImplementedError("Query is not executed in this prototype.")
+    def clear(self):
+        self.client.schema.delete_class(self.index_name)
+
 
