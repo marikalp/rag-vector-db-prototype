@@ -2,7 +2,7 @@ import weaviate
 from src.vectorstores.base_vectorstore import BaseVectorStore
 
 class WeaviateVectorStore(BaseVectorStore):
-    def __init__(self, index_name="RAGDocument", url="http://localhost:9000"):
+    def __init__(self, index_name="RAGDocument", url="https://rag-vector-db-prototype.onrender.com"):
         self.index_name = index_name
 
         # Client v3 verso il proxy HTTP
