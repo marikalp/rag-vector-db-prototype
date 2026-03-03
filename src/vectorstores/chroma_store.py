@@ -1,16 +1,13 @@
 import chromadb
-from chromadb.config import Settings
 from src.vectorstores.base_vectorstore import BaseVectorStore
 
 class ChromaVectorStore(BaseVectorStore):
     def __init__(self, index_name="rag-index", persist_directory="chroma_db"):
         self.index_name = index_name
-        self.client = chromadb.Client(
-            Settings(
-                chroma_db_impl="duckdb+parquet",
-                persist_directory=persist_directory
-            )
-        )
+
+        # Nuova API Chroma
+        self.client = chromadb.PersistentClient(path=persist_directory)
+
         self.collection = self.client.get_or_create_collection(
             name=index_name,
             metadata={"hnsw:space": "cosine"}
@@ -32,8 +29,10 @@ class ChromaVectorStore(BaseVectorStore):
             query_embeddings=[query_embedding],
             n_results=k
         )
+
         docs = results["documents"][0]
         metas = results["metadatas"][0]
+
         return [{"text": d, "metadata": m} for d, m in zip(docs, metas)]
 
     def clear(self):
