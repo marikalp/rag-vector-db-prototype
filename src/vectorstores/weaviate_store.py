@@ -6,9 +6,16 @@ class WeaviateVectorStore(BaseVectorStore):
     def __init__(self, index_name="RAGDocument", url=None):
         self.index_name = index_name
 
-        # Avvia Weaviate Lite (embedded)
+        # Avvio Weaviate Lite in modalità non-bloccante
         self.client = weaviate.WeaviateClient(
-            embedded_options=weaviate.embedded.EmbeddedOptions()
+            embedded_options=weaviate.embedded.EmbeddedOptions(
+                hostname="127.0.0.1",
+                port=9999,
+                persistence_data_path="./weaviate_data",
+                log_level="error",
+                start_server=True,
+                wait_for_server=False
+            )
         )
 
         # Se la collection esiste già, la eliminiamo
@@ -53,6 +60,7 @@ class WeaviateVectorStore(BaseVectorStore):
 
     def clear(self):
         self.client.collections.delete(self.index_name)
+
 
 
 
